@@ -1,7 +1,7 @@
 file "ADBase_settings.req", P=$(P), R=$(R)
 $(P)$(R)BinMode
 $(P)$(R)GainMode
-$(P)$(R)FanGear
+$(P)$(R)FanAuto
 $(P)$(R)AutoLevels
 $(P)$(R)DefectCorrection
 $(P)$(R)HorizontalFlip
@@ -13,7 +13,6 @@ $(P)$(R)DeviceLED
 $(P)$(R)ConnectionConfig
 $(P)$(R)UserSelect
 $(P)$(R)AcquisitionFrameSplitEn
-$(P)$(R)AcqTrigMode
 $(P)$(R)TrigEdge
 $(P)$(R)TrigExpType
 $(P)$(R)TrigOutputPort
@@ -27,6 +26,7 @@ $(P)$(R)TrigOutputWidth
 $(P)$(R)TrigDelay
 $(P)$(R)AcquisitionFrameSplitNum
 $(P)$(R)AcquisitionFrameRate
+$(P)$(R)FanSpeed
 $(P)$(R)BlackLevel
 $(P)$(R)Gamma
 $(P)$(R)Contrast

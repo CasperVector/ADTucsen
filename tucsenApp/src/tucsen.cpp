@@ -29,12 +29,11 @@
 
 #define TucsenBusString           "T_BUS"
 #define TucsenProductIDString     "T_PRODUCT_ID"
-#define TucsenDriverVersionString "T_DRIVER_VERSION"
 #define TucsenTransferRateString  "T_TRANSFER_RATE"
 
 #define TucsenBinningModeString   "T_BIN_MODE"
 #define TucsenImageModeString     "T_IMG_MODE"
-#define TucsenFanGearString       "T_FAN_GEAR"
+#define TucsenFanAutoString       "T_FAN_AUTO"
 #define TucsenAutoLString         "T_AUTO_LEVELS"
 #define TucsenDPCString           "T_DEFECT_CORR"
 #define TucsenHoriString          "T_HORIZONTAL"
@@ -46,7 +45,6 @@
 #define TucsenConConfigString     "T_CXP_CONFIG"
 #define TucsenUserSelectString    "T_USERSELECT"
 #define TucsenSplitEnString       "T_FRAME_SPTEN"
-#define TucsenTrigModeString      "T_ACQTRIG_MODE"
 #define TucsenTrigEdgeString      "T_TRIG_EDGE"
 #define TucsenTrigExpString       "T_TRIG_EXP"
 #define TucsenTrgOutPortString    "T_TRIOUT_PORT"
@@ -61,9 +59,10 @@
 #define TucsenTrigDelayString     "T_TRIG_DELAY"
 #define TucsenSplitNumString      "T_FRAME_SPTNUM"
 #define TucsenFrameRateString     "T_FRAME_RATE"
+#define TucsenFanSpeedString      "T_FAN_SPEED"
 #define TucsenBlackLString        "T_BLACK_LEVEL"
-#define TucsenGammmaString        "T_GAMMA"
-#define TucsenConstString         "T_CONTRAST"
+#define TucsenGammaString         "T_GAMMA"
+#define TucsenContrastString      "T_CONTRAST"
 #define TucsenLeftLString         "T_LEFT_LEVELS"
 #define TucsenRightLString        "T_RIGHT_LEVELS"
 #define TucsenAmbientTString      "T_AMBIENT_TEMPERATURE"
@@ -104,12 +103,11 @@ class tucsen : public ADDriver
         int TucsenBus;
 #define FIRST_TUCSEN_PARAM TucsenBus
         int TucsenProductID;
-        int TucsenDriverVersion;
         int TucsenTransferRate;
 
         int TucsenBinMode;
         int TucsenImageMode;
-        int TucsenFanGear;
+        int TucsenFanAuto;
         int TucsenAutoL;
         int TucsenDPC;
         int TucsenHori;
@@ -121,7 +119,6 @@ class tucsen : public ADDriver
         int TucsenConConfig;
         int TucsenUserSelect;
         int TucsenSplitEn;
-        int TucsenTrigMode;
         int TucsenTrigEdge;
         int TucsenTrigExp;
         int TucsenTrgOutPort;
@@ -136,6 +133,7 @@ class tucsen : public ADDriver
         int TucsenTrigDelay;
         int TucsenSplitNum;
         int TucsenFrameRate;
+        int TucsenFanSpeed;
         int TucsenBlackL;
         int TucsenGamma;
         int TucsenContrast;
@@ -249,12 +247,11 @@ tucsen::tucsen(const char *portName, int cameraId, int traceMask, int maxBuffers
 
     createParam(TucsenBusString,           asynParamOctet,   &TucsenBus);
     createParam(TucsenProductIDString,     asynParamFloat64, &TucsenProductID);
-    createParam(TucsenDriverVersionString, asynParamOctet,   &TucsenDriverVersion);
     createParam(TucsenTransferRateString,  asynParamFloat64, &TucsenTransferRate);
 
     createParam(TucsenBinningModeString,   asynParamInt32,   &TucsenBinMode);
     createParam(TucsenImageModeString,     asynParamInt32,   &TucsenImageMode);
-    createParam(TucsenFanGearString,       asynParamInt32,   &TucsenFanGear);
+    createParam(TucsenFanAutoString,       asynParamInt32,   &TucsenFanAuto);
     createParam(TucsenAutoLString,         asynParamInt32,   &TucsenAutoL);
     createParam(TucsenDPCString,           asynParamInt32,   &TucsenDPC);
     createParam(TucsenHoriString,          asynParamInt32,   &TucsenHori);
@@ -266,7 +263,6 @@ tucsen::tucsen(const char *portName, int cameraId, int traceMask, int maxBuffers
     createParam(TucsenConConfigString,     asynParamInt32,   &TucsenConConfig);
     createParam(TucsenUserSelectString,    asynParamInt32,   &TucsenUserSelect);
     createParam(TucsenSplitEnString,       asynParamInt32,   &TucsenSplitEn);
-    createParam(TucsenTrigModeString,      asynParamInt32,   &TucsenTrigMode);
     createParam(TucsenTrigEdgeString,      asynParamInt32,   &TucsenTrigEdge);
     createParam(TucsenTrigExpString,       asynParamInt32,   &TucsenTrigExp);
     createParam(TucsenTrgOutPortString,    asynParamInt32,   &TucsenTrgOutPort);
@@ -281,9 +277,10 @@ tucsen::tucsen(const char *portName, int cameraId, int traceMask, int maxBuffers
     createParam(TucsenTrigDelayString,     asynParamInt32,   &TucsenTrigDelay);
     createParam(TucsenSplitNumString,      asynParamInt32,   &TucsenSplitNum);
     createParam(TucsenFrameRateString,     asynParamFloat64, &TucsenFrameRate);
+    createParam(TucsenFanSpeedString,      asynParamInt32,   &TucsenFanSpeed);
     createParam(TucsenBlackLString,        asynParamInt32,   &TucsenBlackL);
-    createParam(TucsenGammmaString,        asynParamInt32,   &TucsenGamma);
-    createParam(TucsenConstString,         asynParamInt32,   &TucsenContrast);
+    createParam(TucsenGammaString,         asynParamInt32,   &TucsenGamma);
+    createParam(TucsenContrastString,      asynParamInt32,   &TucsenContrast);
     createParam(TucsenLeftLString,         asynParamInt32,   &TucsenLeftL);
     createParam(TucsenRightLString,        asynParamInt32,   &TucsenRightL);
     createParam(TucsenAmbientTString,      asynParamFloat64, &TucsenAmbientTemperature);
@@ -311,7 +308,6 @@ tucsen::tucsen(const char *portName, int cameraId, int traceMask, int maxBuffers
     epicsSnprintf(versionString, sizeof(versionString), "%d.%d.%d",
             DRIVER_VERSION, DRIVER_REVISION, DRIVER_MODIFICATION);
     setStringParam(NDDriverVersion, versionString);
-    setStringParam(TucsenDriverVersion, versionString);
 
     setIntegerParam(TucsenAcqStart, 0);
     setIntegerParam(TucsenAcqStop, 0);
@@ -421,15 +417,13 @@ asynStatus tucsen::connectCamera()
 asynStatus tucsen::iniCameraPara()
 {
     int tucStatus;
-    int nVal = 0;
     int nSizeX = 0;
     int nSizeY = 0;
     TUCAM_ELEMENT node;
 
     node.pName = "AcquisitionTrigMode";
     tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
-    nVal = (node.nVal > 0)? 1 : 0;
-    setIntegerParam(ADTriggerMode, nVal);
+    setIntegerParam(ADTriggerMode, node.nVal);
 
     node.pName = "AcquisitionExpTime";
     TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
@@ -477,9 +471,9 @@ asynStatus tucsen::iniCameraPara()
     tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
     setIntegerParam(TucsenImageMode, node.nVal);
 
-    node.pName = "FanSpeed";
+    node.pName = "FanAuto";
     tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
-    setIntegerParam(TucsenFanGear, node.nVal);
+    setIntegerParam(TucsenFanAuto, node.nVal);
 
     node.pName = "DefectPixelCorrection";
     tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
@@ -517,13 +511,9 @@ asynStatus tucsen::iniCameraPara()
     tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
     setIntegerParam(TucsenUserSelect, node.nVal);
 
-    node.pName = "AcquisitionFrameSplitEn";
+    node.pName = "AcquisitionFrameSplit";
     tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
     setIntegerParam(TucsenSplitEn, node.nVal);
-
-    node.pName = "AcquisitionTrigMode";
-    tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
-    setIntegerParam(TucsenTrigMode, node.nVal);
 
     node.pName = "TrigEdge";
     tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
@@ -576,6 +566,10 @@ asynStatus tucsen::iniCameraPara()
     node.pName = "AcquisitionFrameRate";
     tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
     setDoubleParam(TucsenFrameRate, node.dbVal);
+
+    node.pName = "FanSpeed";
+    tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
+    setIntegerParam(TucsenFanSpeed, node.nVal);
 
     node.pName = "BlackLevel";
     tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
@@ -699,7 +693,7 @@ void tucsen::imageGrabTask(void)
             tucStatus = TUCAM_Cap_Stop(camHandle_.hIdxTUCam);
             epicsEventWait(startEventId_);
             lock();
-            getIntegerParam(TucsenTrigMode, &triggerMode);
+            getIntegerParam(ADTriggerMode, &triggerMode);
             tucStatus = TUCAM_Buf_Alloc(camHandle_.hIdxTUCam, &frameHandle_);
             tucStatus = TUCAM_Cap_Start(camHandle_.hIdxTUCam, triggerMode);
             if (tucStatus!=TUCAMRET_SUCCESS){
@@ -985,8 +979,7 @@ asynStatus tucsen::writeInt32( asynUser *pasynUser, epicsInt32 value)
             status |= stopCapture();
         }
         bSetPara = false;
-    } else if ((function==ADNumImages)   ||
-               (function==ADNumExposures)){
+    } else if (function==ADNumImages){
         bSetPara = false;
     } else if (function==TucsenAutoL){
         bSetPara = false;
@@ -1026,8 +1019,8 @@ asynStatus tucsen::writeInt32( asynUser *pasynUser, epicsInt32 value)
         node.pName = "Binning";
     } else if (function==TucsenImageMode){
         node.pName = "GainMode";
-    } else if (function==TucsenFanGear){
-        node.pName = "FanSpeed";
+    } else if (function==TucsenFanAuto){
+        node.pName = "FanAuto";
     } else if (function==TucsenDPC){
         node.pName = "DefectPixelCorrection";
     } else if (function==TucsenHori){
@@ -1047,9 +1040,7 @@ asynStatus tucsen::writeInt32( asynUser *pasynUser, epicsInt32 value)
     } else if (function==TucsenUserSelect){
         node.pName = "UserSelect";
     } else if (function==TucsenSplitEn){
-        node.pName = "AcquisitionFrameSplitEn";
-    } else if (function==TucsenTrigMode){
-        node.pName = "AcquisitionTrigMode";
+        node.pName = "AcquisitionFrameSplit";
     } else if (function==TucsenTrigEdge){
         node.pName = "TrigEdge";
     } else if (function==TucsenTrigExp){
@@ -1074,6 +1065,8 @@ asynStatus tucsen::writeInt32( asynUser *pasynUser, epicsInt32 value)
         node.pName = "TrigDelay";
     } else if (function==TucsenSplitNum){
         node.pName = "AcquisitionFrameSplitNum";
+    } else if (function==TucsenFanSpeed){
+        node.pName = "FanSpeed";
     } else if (function==TucsenBlackL){
         node.pName = "BlackLevel";
     } else if (function==TucsenAcqStart){
@@ -1087,7 +1080,7 @@ asynStatus tucsen::writeInt32( asynUser *pasynUser, epicsInt32 value)
     } else if (function==TucsenFactoryDefault){
         node.pName = "FactoryDefault";
     } else if (function==TucsenDeviceReset){
-        node.pName = "AntiDew";
+        node.pName = "DeviceReset";
     } else {
         if (function < FIRST_TUCSEN_PARAM){
             status |= ADDriver::writeInt32(pasynUser, value);

@@ -13,6 +13,34 @@ include "ADBase.template"
 #  These records control the data type and color                              #
 ###############################################################################
 
+record(mbbo, "$(P)$(R)TriggerMode")
+{
+   field(ZRST, "Free Run")
+   field(ZRVL, "0")
+   field(ONST, "Standard")
+   field(ONVL, "1")
+   field(TWST, "Synchronous")
+   field(TWVL, "2")
+   field(THST, "Global")
+   field(THVL, "3")
+   field(FRST, "Software")
+   field(FRVL, "4")
+}
+
+record(mbbi, "$(P)$(R)TriggerMode_RBV")
+{
+   field(ZRST, "Free Run")
+   field(ZRVL, "0")
+   field(ONST, "Standard")
+   field(ONVL, "1")
+   field(TWST, "Synchronous")
+   field(TWVL, "2")
+   field(THST, "Global")
+   field(THVL, "3")
+   field(FRST, "Software")
+   field(FRVL, "4")
+}
+
 record(mbbo, "$(P)$(R)ColorMode")
 {
    field(ZRST, "Mono")
@@ -70,13 +98,6 @@ record(ai, "$(P)$(R)ProductID_RBV")
    field(DTYP, "asynFloat64")
    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_PRODUCT_ID")
    field(PREC, "3")
-}
-
-record(stringin, "$(P)$(R)DriverVersion_RBV")
-{
-   field(PINI, "YES")
-   field(DTYP, "asynOctetRead")
-   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_DRIVER_VERSION")
 }
 
 record(ai, "$(P)$(R)TransferRate_RBV")
@@ -155,18 +176,17 @@ record(mbbi, "$(P)$(R)GainMode_RBV")
     field(FVVL, "5")
 }
 
-record(mbbo, "$(P)$(R)FanGear")
+record(mbbo, "$(P)$(R)FanAuto")
 {
    field(PINI, "YES")
    field(DTYP, "asynInt32")
-   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_FAN_GEAR")
-   field(VAL, "0")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_FAN_AUTO")
 }
 
-record(mbbi, "$(P)$(R)FanGear_RBV")
+record(mbbi, "$(P)$(R)FanAuto_RBV")
 {
    field(DTYP, "asynInt32")
-   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_FAN_GEAR")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_FAN_AUTO")
    field(SCAN, "I/O Intr")
 }
 
@@ -488,32 +508,6 @@ record(mbbi, "$(P)$(R)AcquisitionFrameSplitEn_RBV")
    field(ONVL, "1")
 }
 
-record(mbbo, "$(P)$(R)AcqTrigMode")
-{
-   field(PINI, "YES")
-   field(DTYP, "asynInt32")
-   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_ACQTRIG_MODE")
-   field(ZRST, "FreeRunning")
-   field(ZRVL, "0")
-   field(ONST, "Standard")
-   field(ONVL, "1")
-   field(TWST, "Software")
-   field(TWVL, "2")
-}
-
-record(mbbi, "$(P)$(R)AcqTrigMode_RBV")
-{
-   field(DTYP, "asynInt32")
-   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_ACQTRIG_MODE")
-   field(SCAN, "I/O Intr")
-   field(ZRST, "FreeRunning")
-   field(ZRVL, "0")
-   field(ONST, "Standard")
-   field(ONVL, "1")
-   field(TWST, "Software")
-   field(TWVL, "2")
-}
-
 record(mbbo, "$(P)$(R)TrigEdge")
 {
    field(PINI, "YES")
@@ -779,6 +773,20 @@ record(ai, "$(P)$(R)AcquisitionFrameRate_RBV")
    field(DTYP, "asynFloat64")
    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_FRAME_RATE")
    field(PREC, "3")
+   field(SCAN, "I/O Intr")
+}
+
+record(ao, "$(P)$(R)FanSpeed")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_FAN_SPEED")
+}
+
+record(ai, "$(P)$(R)FanSpeed_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_FAN_SPEED")
    field(SCAN, "I/O Intr")
 }
 
