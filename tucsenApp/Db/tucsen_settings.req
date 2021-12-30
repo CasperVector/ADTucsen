@@ -1,8 +1,10 @@
+file "ADBase_settings.req", P=$(P), R=$(R)
 $(P)$(R)BinMode
-$(P)$(R)HorizontalFlip
+$(P)$(R)GainMode
 $(P)$(R)FanGear
 $(P)$(R)AutoLevels
 $(P)$(R)DefectCorrection
+$(P)$(R)HorizontalFlip
 $(P)$(R)TestPattern
 $(P)$(R)DSNU
 $(P)$(R)PRNU
@@ -17,12 +19,12 @@ $(P)$(R)TrigExpType
 $(P)$(R)TrigOutputPort
 $(P)$(R)TrigOutputKind
 $(P)$(R)TrigOutputEdge
-$(P)$(R)TrigOutputDelay
-$(P)$(R)TrigOutputWidth
-$(P)$(R)TrigDelay
 $(P)$(R)SensorCoolType
 $(P)$(R)SensorCooling
 $(P)$(R)AntiDew
+$(P)$(R)TrigOutputDelay
+$(P)$(R)TrigOutputWidth
+$(P)$(R)TrigDelay
 $(P)$(R)AcquisitionFrameSplitNum
 $(P)$(R)AcquisitionFrameRate
 $(P)$(R)BlackLevel
@@ -35,10 +37,4 @@ $(P)$(R)Humidity
 $(P)$(R)DeviceTemperature
 $(P)$(R)DeviceWarningTemperature
 $(P)$(R)DeviceWorkingTime
-$(P)$(R)TUAcquireStart
-$(P)$(R)TUAcquireStop
-$(P)$(R)TUTrigSoftSignal
-$(P)$(R)TUParaSave
-$(P)$(R)TUFactoryDefault
-$(P)$(R)TUDeviceReset
-file "ADBase_settings.req", P=$(P), R=$(R)
+

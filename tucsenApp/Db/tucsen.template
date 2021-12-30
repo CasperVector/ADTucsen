@@ -1,20 +1,18 @@
-# Database for the records specific to the Tucsencameras
+# Database for the records specific to the Tucsen cameras
 # Tucsen
 # Jul 21, 2021
 
 include "ADBase.template"
 
 ###############################################################################
-#  Note: The following are records defined in ADBase.template.                #
-#        We are changing some of the fields here to reflect valid values for  #
-#        tucsen camera
+#  Note: The following are records defined in ADBase.template                 #
+#        We are changing some of the fields here to reflect the valid values  #
 ###############################################################################
 
 ###############################################################################
-#  These records control the data type and color.                             # 
+#  These records control the data type and color                              #
 ###############################################################################
 
-# Only Mono color mode is supported at this time
 record(mbbo, "$(P)$(R)ColorMode")
 {
    field(ZRST, "Mono")
@@ -55,16 +53,10 @@ record(mbbi, "$(P)$(R)ColorMode_RBV")
    field(SVVL, "")
 }
 
-
-# The following records are specific to the Andor SDK3
-# Note that we don't define the choices for mbbo and mbii records here.
-# These choices are built at iocInit by reading the list of valid choices
-# from the Andor SDK.  This is very nice because they automatically change
-# depending on the capabilities of the camera.
-
 ###############################################################################
 #  These records are additional acquisition parameters                        #
 ###############################################################################
+
 record(stringin, "$(P)$(R)Bus_RBV")
 {
    field(PINI, "YES")
@@ -95,9 +87,10 @@ record(ai, "$(P)$(R)TransferRate_RBV")
    field(SCAN, "I/O Intr")
 }
 
-###################################################################
-#  menu                                                           # 
-###################################################################
+###############################################################################
+#  These are menus                                                            #
+###############################################################################
+
 record(mbbo, "$(P)$(R)BinMode")
 {
     field(PINI, "YES")
@@ -160,28 +153,6 @@ record(mbbi, "$(P)$(R)GainMode_RBV")
     field(FRVL, "4")
     field(FVST, "LG_HS_12bit")
     field(FVVL, "5")
-}
-
-record(mbbo, "$(P)$(R)HorizontalFlip")
-{
-   field(PINI, "YES")
-   field(DTYP, "asynInt32")
-   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_HORIZONTAL")
-   field(ZRST, "OFF")
-   field(ZRVL, "0")
-   field(ONST, "ON")
-   field(ONVL, "1")
-}
-
-record(mbbi, "$(P)$(R)HorizontalFlip_RBV")
-{
-   field(DTYP, "asynInt32")
-   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_HORIZONTAL")
-   field(SCAN, "I/O Intr")
-   field(ZRST, "OFF")
-   field(ZRVL, "0")
-   field(ONST, "ON")
-   field(ONVL, "1")
 }
 
 record(mbbo, "$(P)$(R)FanGear")
@@ -249,6 +220,28 @@ record(mbbi, "$(P)$(R)DefectCorrection_RBV")
    field(TWVL, "2")
    field(THST, "High")
    field(THVL, "3")
+}
+
+record(mbbo, "$(P)$(R)HorizontalFlip")
+{
+   field(PINI, "YES")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_HORIZONTAL")
+   field(ZRST, "OFF")
+   field(ZRVL, "0")
+   field(ONST, "ON")
+   field(ONVL, "1")
+}
+
+record(mbbi, "$(P)$(R)HorizontalFlip_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_HORIZONTAL")
+   field(SCAN, "I/O Intr")
+   field(ZRST, "OFF")
+   field(ZRVL, "0")
+   field(ONST, "ON")
+   field(ONVL, "1")
 }
 
 record(mbbo, "$(P)$(R)TestPattern")
@@ -713,14 +706,15 @@ record(mbbi, "$(P)$(R)AntiDew_RBV")
    field(ONVL, "1")
 }
 
-###################################################################
-#  These change value                                             # 
-###################################################################
+###############################################################################
+#  These change values                                                        #
+###############################################################################
+
 record(ao, "$(P)$(R)TrigOutputDelay")
 {
    field(PINI, "YES")
    field(DTYP, "asynInt32")
-   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_TRIOUT_DELAY")  
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_TRIOUT_DELAY")
 }
 
 record(ai, "$(P)$(R)TrigOutputDelay_RBV")
@@ -734,7 +728,7 @@ record(ao, "$(P)$(R)TrigOutputWidth")
 {
    field(PINI, "YES")
    field(DTYP, "asynInt32")
-   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_TRIOUT_WIDTH")  
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_TRIOUT_WIDTH")
 }
 
 record(ai, "$(P)$(R)TrigOutputWidth_RBV")
@@ -748,7 +742,7 @@ record(ao, "$(P)$(R)TrigDelay")
 {
    field(PINI, "YES")
    field(DTYP, "asynInt32")
-   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_TRIG_DELAY")  
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_TRIG_DELAY")
 }
 
 record(ai, "$(P)$(R)TrigDelay_RBV")
@@ -762,7 +756,7 @@ record(ao, "$(P)$(R)AcquisitionFrameSplitNum")
 {
    field(PINI, "YES")
    field(DTYP, "asynInt32")
-   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_FRAME_SPTNUM")  
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_FRAME_SPTNUM")
 }
 
 record(ai, "$(P)$(R)AcquisitionFrameSplitNum_RBV")
@@ -777,7 +771,7 @@ record(ao, "$(P)$(R)AcquisitionFrameRate")
    field(PINI, "YES")
    field(DTYP, "asynFloat64")
    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_FRAME_RATE")
-   field(PREC, "3")  
+   field(PREC, "3")
 }
 
 record(ai, "$(P)$(R)AcquisitionFrameRate_RBV")
@@ -792,7 +786,7 @@ record(ao, "$(P)$(R)BlackLevel")
 {
    field(PINI, "YES")
    field(DTYP, "asynInt32")
-   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_BLACK_LEVEL")  
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_BLACK_LEVEL")
 }
 
 record(ai, "$(P)$(R)BlackLevel_RBV")
@@ -806,7 +800,7 @@ record(ao, "$(P)$(R)Gamma")
 {
    field(PINI, "YES")
    field(DTYP, "asynInt32")
-   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_GAMMA")  
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_GAMMA")
 }
 
 record(ai, "$(P)$(R)Gamma_RBV")
@@ -820,7 +814,7 @@ record(ao, "$(P)$(R)Contrast")
 {
    field(PINI, "YES")
    field(DTYP, "asynInt32")
-   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_CONTRAST")  
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_CONTRAST")
 }
 
 record(ai, "$(P)$(R)Contrast_RBV")
@@ -834,7 +828,7 @@ record(ao, "$(P)$(R)LeftLevels")
 {
    field(PINI, "YES")
    field(DTYP, "asynInt32")
-   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_LEFT_LEVELS")  
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_LEFT_LEVELS")
 }
 
 record(ai, "$(P)$(R)LeftLevels_RBV")
@@ -848,7 +842,7 @@ record(ao, "$(P)$(R)RightLevels")
 {
    field(PINI, "YES")
    field(DTYP, "asynInt32")
-   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_RIGHT_LEVELS")  
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_RIGHT_LEVELS")
 }
 
 record(ai, "$(P)$(R)RightLevels_RBV")
@@ -862,8 +856,8 @@ record(ao, "$(P)$(R)AmbientTemperature")
 {
    field(PINI, "YES")
    field(DTYP, "asynFloat64")
-   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_AMBIENT_TEMPERATURE") 
-   field(PREC, "3") 
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_AMBIENT_TEMPERATURE")
+   field(PREC, "3")
 }
 
 record(ai, "$(P)$(R)AmbientTemperature_RBV")
@@ -878,7 +872,7 @@ record(ao, "$(P)$(R)Humidity")
 {
    field(PINI, "YES")
    field(DTYP, "asynFloat64")
-   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_HUMIDITY")  
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))T_HUMIDITY")
    field(PREC, "3")
 }
 
@@ -915,10 +909,10 @@ record(ai, "$(P)$(R)DeviceWorkingTime")
    field(SCAN, "I/O Intr")
 }
 
-###################################################################
-#  These records control  acquisition start and                   # 
-#  and stop                                                       #
-###################################################################
+###############################################################################
+#  These control acquisition start and stop                                   #
+###############################################################################
+
 record(bo, "$(P)$(R)TUAcquireStart") {
    field(DTYP, "asynInt32")
    field(OUT, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))T_ACQUIRE_START")
@@ -990,3 +984,4 @@ record(bi, "$(P)$(R)TUDeviceReset_RBV") {
    field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))T_DEVICE_RESET")
    field(SCAN, "I/O Intr")
 }
+
