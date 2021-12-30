@@ -28,7 +28,7 @@
 #define DRIVER_REVISION     "1.0.0.0"
 #define DRIVER_MODIFICATION 0
 
-#define TucsenBusString           "T_BUS"     
+#define TucsenBusString           "T_BUS"
 #define TucsenProductIDString     "T_PRODUCT_ID"
 #define TucsenDriverVersionString "T_DRIVER_VERSION"
 #define TucsenTransferRateString  "T_TRANSFER_RATE"
@@ -398,19 +398,19 @@ asynStatus tucsen::connectCamera()
     tucStatus = TUCAM_Api_Init(&apiHandle_);
     if (tucStatus!=TUCAMRET_SUCCESS){
         asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
-                "%s:%s: TUCAM API init failed (%x)\n",
+                "%s:%s: TUCAM API init failed (0x%x)\n",
                 driverName, functionName, tucStatus);
         return asynError;
     }
     if (apiHandle_.uiCamCount<1){
         asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
-                "%s:%s: no camera detected (%x)\n",
+                "%s:%s: no camera detected (0x%x)\n",
                 driverName, functionName, tucStatus);
         return asynError;
     }
-    
+
     TUCAMInitialized++;
-    
+
     // Init camera
     camHandle_.hIdxTUCam = NULL;
     camHandle_.uiIdxOpen = 0;
@@ -418,7 +418,7 @@ asynStatus tucsen::connectCamera()
     tucStatus = TUCAM_Dev_Open(&camHandle_);
     if (tucStatus!=TUCAMRET_SUCCESS){
         asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
-                "%s:%s: open camera device failed (%d)\n",
+                "%s:%s: open camera device failed (0x%x)\n",
                 driverName, functionName, tucStatus);
         return asynError;
     }
@@ -717,7 +717,7 @@ asynStatus tucsen::disconnectCamera(void){
         tucStatus = TUCAM_Cap_Stop(camHandle_.hIdxTUCam);
         if (tucStatus!=TUCAMRET_SUCCESS){
             asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
-                    "%s:%s: unable to stop acquisition (%d)\n",
+                    "%s:%s: unable to stop acquisition (0x%x)\n",
                     driverName, functionName, tucStatus);
         }
     }
@@ -726,14 +726,14 @@ asynStatus tucsen::disconnectCamera(void){
     tucStatus = TUCAM_Buf_Release(camHandle_.hIdxTUCam);
     if (tucStatus!=TUCAMRET_SUCCESS){
         asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
-                "%s:%s: unable to release camera buffer (%d)\n",
+                "%s:%s: unable to release camera buffer (0x%x)\n",
                 driverName, functionName, tucStatus);
     }
 
     tucStatus = TUCAM_Dev_Close(camHandle_.hIdxTUCam);
     if (tucStatus!=TUCAMRET_SUCCESS){
         asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
-                "%s:%s: unable close camera (%d)\n",
+                "%s:%s: unable close camera (0x%x)\n",
                 driverName, functionName, tucStatus);
     }
     return asynSuccess;
@@ -784,7 +784,7 @@ void tucsen::imageGrabTask(void)
             //printf("callback done\n");
             if (tucStatus!=TUCAMRET_SUCCESS){
                 asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
-                          "%s:%s: Failed to start image capture (%d)\n",
+                          "%s:%s: failed to start image capture (0x%x)\n",
                           driverName, functionName, tucStatus);
             }
             asynPrint(pasynUserSelf, ASYN_TRACE_FLOW,
@@ -854,17 +854,17 @@ asynStatus tucsen::grabImage()
     int count;
 
 
-	//printf("do unlock\n");
+    //printf("do unlock\n");
     //unlock();
-	//printf("wait for buffer\n");
+    //printf("wait for buffer\n");
     tucStatus = TUCAM_Buf_WaitForFrame(camHandle_.hIdxTUCam, &frameHandle_);
-	//printf("Waiting for lock\n");
+    //printf("Waiting for lock\n");
     //lock();
-	//printf("Got lock\n");
+    //printf("Got lock\n");
     if (tucStatus!= TUCAMRET_SUCCESS){
-		asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
-				"%s:%s: Failed to wait for buffer (%d)\n",
-				driverName, functionName, tucStatus);
+        asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
+                "%s:%s: failed to wait for buffer (0x%x)\n",
+                driverName, functionName, tucStatus);
     }
 
     setIntegerParam(ADStatus, ADStatusReadout);
@@ -894,7 +894,7 @@ asynStatus tucsen::grabImage()
 
     /* There is zero documentation on what the formats mean
      * Most of the below is gleaned through trial and error */
-	if (0x10 == pixelFormat){
+    if (0x10 == pixelFormat){
             // Raw data - no filtering applied
             dataType = NDUInt16;
             colorMode = NDColorModeMono;
@@ -908,7 +908,7 @@ asynStatus tucsen::grabImage()
                 dataType=NDUInt16;
                 pixelSize = 2;
             }
-            
+
             if (channels==1){
                 colorMode = NDColorModeMono;
                 numColors = 1;
@@ -1323,7 +1323,7 @@ asynStatus tucsen::readFloat64(asynUser *pasynUser, epicsFloat64 *value)
 
     if (tucStatus != TUCAMRET_SUCCESS){
         asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
-                  "%s:%s: failed to set double(%x)\n",
+                  "%s:%s: failed to set double(0x%x)\n",
                   driverName, functionName, tucStatus);
     }
 
@@ -1484,7 +1484,7 @@ void tucsen::tempTask(void){
         dbVal = node.dbVal;
         if (tucStatus!=TUCAMRET_SUCCESS){
             asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
-                      "%s:%s: failed to read temperature (%d)\n",
+                      "%s:%s: failed to read temperature (0x%x)\n",
                       driverName, functionName, tucStatus);
         } else {
             setDoubleParam(ADTemperatureActual, dbVal);
@@ -1495,7 +1495,7 @@ void tucsen::tempTask(void){
         dbVal = node.dbVal;
         if (tucStatus!=TUCAMRET_SUCCESS){
             asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
-                      "%s:%s: failed to read device temperature (%d)\n",
+                      "%s:%s: failed to read device temperature (0x%x)\n",
                       driverName, functionName, tucStatus);
         } else {
             setDoubleParam(TucsenDeviceTemperature, dbVal);
@@ -1506,7 +1506,7 @@ void tucsen::tempTask(void){
         nVal = node.nVal;
         if (tucStatus!=TUCAMRET_SUCCESS){
             asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
-                      "%s:%s: failed to read working time (%d)\n",
+                      "%s:%s: failed to read working time (0x%x)\n",
                       driverName, functionName, tucStatus);
         } else {
             setIntegerParam(TucsenDeviceWorkingTime, nVal);
@@ -1516,7 +1516,7 @@ void tucsen::tempTask(void){
         tucStatus = TUCAM_Dev_GetInfo(camHandle_.hIdxTUCam, &valInfo);
         if (tucStatus!=TUCAMRET_SUCCESS){
             asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
-                      "%s:%s: failed to read transfer rate(%d)\n",
+                      "%s:%s: failed to read transfer rate (0x%x)\n",
                       driverName, functionName, tucStatus);
         } else {
             setDoubleParam(TucsenTransferRate, valInfo.nValue);
@@ -1545,7 +1545,7 @@ asynStatus tucsen::getCamInfo(int nID, char *sBuf, int &val)
         return asynSuccess;
     } else {
         asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
-                  "%s:%s: could not get %d\n",
+                  "%s:%s: could not get 0x%x\n",
                   driverName, functionName, tucStatus);
         return asynError;
     }
@@ -1597,7 +1597,7 @@ asynStatus tucsen::setCamInfo(int param, int nID, int dtype)
         {
             setStringParam(param, valInfo.pText);
         }
-        
+
         callParamCallbacks();
         return asynSuccess;
     } else {
@@ -1739,7 +1739,7 @@ asynStatus tucsen::stopCapture()
     setShutter(0);
     setIntegerParam(ADStatus, ADStatusWaiting);
     callParamCallbacks();
-	//tucStatus = TUCAM_Cap_Stop(camHandle_.hIdxTUCam);
+    //tucStatus = TUCAM_Cap_Stop(camHandle_.hIdxTUCam);
     setIntegerParam(ADAcquire, 0);
     setIntegerParam(ADStatus, ADStatusIdle);
     callParamCallbacks();
