@@ -21,7 +21,6 @@
 #include <epicsExport.h>
 
 #include <TUCamApi.h>
-
 #include <ADDriver.h>
 
 #define DRIVER_VERSION      1
@@ -346,7 +345,6 @@ tucsen::tucsen(const char *portName, int cameraId, int traceMask, int maxBuffers
             epicsThreadGetStackSize(epicsThreadStackMedium),
             tempReadTaskC, this);
 
-
     /* Launch shutdown task */
     epicsAtExit(c_shutdown, this);
 
@@ -406,7 +404,7 @@ asynStatus tucsen::connectCamera()
                 driverName, functionName, tucStatus);
         return asynError;
     }
-    ///printf("TUCAM_Dev_Open = %d\n", apiHandle_.uiCamCount);
+
     status = setCamInfo(TucsenBus, TUIDI_BUS, 0);
     status = setCamInfo(TucsenProductID, TUIDI_PRODUCT, 1);
     status = setCamInfo(ADSDKVersion, TUIDI_VERSION_API, 0);
@@ -422,12 +420,10 @@ asynStatus tucsen::connectCamera()
 
 asynStatus tucsen::iniCameraPara()
 {
-    static const char* functionName = "iniCameraPara";
     int tucStatus;
     int nVal = 0;
     int nSizeX = 0;
     int nSizeY = 0;
-    asynStatus status = asynSuccess;
     TUCAM_ELEMENT node;
 
     node.pName = "AcquisitionTrigMode";
@@ -593,15 +589,13 @@ asynStatus tucsen::iniCameraPara()
     tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
     setDoubleParam(TucsenHumidity, node.dbVal);
 
-    return status;
+    return asynSuccess;
 }
 
 asynStatus tucsen::iniImgAdjustPara()
 {
-    static const char* functionName = "iniImgAdjustPara";
     int nVal = 0;
     double dbVal = 0;
-    asynStatus status = asynSuccess;
     TUCAM_CAPA_ATTR attrCapa;
     TUCAM_PROP_ATTR attrProp;
 
@@ -645,7 +639,7 @@ asynStatus tucsen::iniImgAdjustPara()
         setIntegerParam(TucsenContrast, nVal);
     }
 
-    return status;
+    return asynSuccess;
 }
 
 asynStatus tucsen::disconnectCamera(void){
@@ -675,7 +669,7 @@ asynStatus tucsen::disconnectCamera(void){
 void tucsen::imageGrabTask(void)
 {
     static const char* functionName = "imageGrabTask";
-    asynStatus status  = asynSuccess;
+    asynStatus status = asynSuccess;
     int tucStatus;
     int imageCounter;
     int numImages, numImagesCounter;
@@ -699,8 +693,8 @@ void tucsen::imageGrabTask(void)
                 callParamCallbacks();
             }
             asynPrint(pasynUserSelf, ASYN_TRACE_FLOW,
-                      "%s:%s: waiting for acquisition to start\n",
-                      driverName, functionName);
+                    "%s:%s: waiting for acquisition to start\n",
+                    driverName, functionName);
             unlock();
             tucStatus = TUCAM_Cap_Stop(camHandle_.hIdxTUCam);
             epicsEventWait(startEventId_);
@@ -711,8 +705,8 @@ void tucsen::imageGrabTask(void)
             if (tucStatus!=TUCAMRET_SUCCESS){
                 status = asynError;
                 asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
-                          "%s:%s: failed to start image capture (0x%x)\n",
-                          driverName, functionName, tucStatus);
+                        "%s:%s: failed to start image capture (0x%x)\n",
+                        driverName, functionName, tucStatus);
                 setIntegerParam(ADAcquire, 0);
                 setIntegerParam(ADStatus, ADStatusError);
                 setStringParam(ADStatusMessage, "Failed to start image capture");
@@ -723,8 +717,8 @@ void tucsen::imageGrabTask(void)
             setIntegerParam(ADStatus, ADStatusAcquire);
             setStringParam(ADStatusMessage, "Acquiring...");
             asynPrint(pasynUserSelf, ASYN_TRACE_FLOW,
-                      "%s:%s: acquisition started\n",
-                      driverName, functionName);
+                    "%s:%s: acquisition started\n",
+                    driverName, functionName);
             setIntegerParam(ADNumImagesCounter, 0);
             setIntegerParam(ADAcquire, 1);
             callParamCallbacks();
@@ -786,23 +780,22 @@ void tucsen::imageGrabTask(void)
 asynStatus tucsen::grabImage()
 {
     static const char* functionName = "grabImage";
-    asynStatus status = asynSuccess;
     int tucStatus;
     int nCols, nRows;
     int pixelFormat, channels, bitDepth;
     size_t dataSize, tDataSize;
-    NDDataType_t dataType = NDUInt16;
-    NDColorMode_t colorMode = NDColorModeMono;
+    NDDataType_t dataType;
+    NDColorMode_t colorMode;
     int numColors = 1;
     int pixelSize = 2;
     size_t dims[3] = {0};
     int nDims;
     int count;
 
-    unlock();
     asynPrint(pasynUserSelf, ASYN_TRACE_FLOW,
             "%s:%s: wait for buffer\n",
             driverName, functionName);
+    unlock();
     tucStatus = TUCAM_Buf_WaitForFrame(camHandle_.hIdxTUCam, &frameHandle_);
     lock();
     if (tucStatus!= TUCAMRET_SUCCESS){
@@ -910,7 +903,7 @@ asynStatus tucsen::grabImage()
 
     pRaw_->pAttributeList->add("ColorMode", "Color mode", NDAttrInt32, &colorMode);
 
-    return status;
+    return asynSuccess;
 }
 
 void tucsen::tempTask(void){
@@ -923,14 +916,13 @@ void tucsen::tempTask(void){
 
     lock();
     while (!exiting_){
-
         node.pName = "SensorTemperature";
         tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
         dbVal = node.dbVal;
         if (tucStatus!=TUCAMRET_SUCCESS){
             asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
-                      "%s:%s: failed to read temperature (0x%x)\n",
-                      driverName, functionName, tucStatus);
+                    "%s:%s: failed to read temperature (0x%x)\n",
+                    driverName, functionName, tucStatus);
         } else {
             setDoubleParam(ADTemperatureActual, dbVal);
         }
@@ -940,8 +932,8 @@ void tucsen::tempTask(void){
         dbVal = node.dbVal;
         if (tucStatus!=TUCAMRET_SUCCESS){
             asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
-                      "%s:%s: failed to read device temperature (0x%x)\n",
-                      driverName, functionName, tucStatus);
+                    "%s:%s: failed to read device temperature (0x%x)\n",
+                    driverName, functionName, tucStatus);
         } else {
             setDoubleParam(TucsenDeviceTemperature, dbVal);
         }
@@ -951,8 +943,8 @@ void tucsen::tempTask(void){
         nVal = node.nVal;
         if (tucStatus!=TUCAMRET_SUCCESS){
             asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
-                      "%s:%s: failed to read working time (0x%x)\n",
-                      driverName, functionName, tucStatus);
+                    "%s:%s: failed to read working time (0x%x)\n",
+                    driverName, functionName, tucStatus);
         } else {
             setIntegerParam(TucsenDeviceWorkingTime, nVal);
         }
@@ -961,8 +953,8 @@ void tucsen::tempTask(void){
         tucStatus = TUCAM_Dev_GetInfo(camHandle_.hIdxTUCam, &valInfo);
         if (tucStatus!=TUCAMRET_SUCCESS){
             asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
-                      "%s:%s: failed to read transfer rate (0x%x)\n",
-                      driverName, functionName, tucStatus);
+                    "%s:%s: failed to read transfer rate (0x%x)\n",
+                    driverName, functionName, tucStatus);
         } else {
             setDoubleParam(TucsenTransferRate, valInfo.nValue);
         }
@@ -973,22 +965,19 @@ void tucsen::tempTask(void){
     }
 }
 
-/* Sets an int32 parameter */
 asynStatus tucsen::writeInt32( asynUser *pasynUser, epicsInt32 value)
 {
     static const char* functionName = "writeInt32";
     const char* paramName;
     asynStatus status = asynSuccess;
     bool bSetPara = true;
-    int tucStatus;
+    int tucStatus = TUCAMRET_SUCCESS;
     int function = pasynUser->reason;
     double dbVal = 0;
     TUCAM_ELEMENT node;
 
     getParamName(function, &paramName);
     status = setIntegerParam(function, value);
-    printf("Write Int32 pName = %s, function = %d, value = %d\n", paramName, function, value);
-    ///return status;
     if (function==ADAcquire){
         if (value){
             status = startCapture();
@@ -1018,20 +1007,20 @@ asynStatus tucsen::writeInt32( asynUser *pasynUser, epicsInt32 value)
         TUCAM_Prop_SetValue(camHandle_.hIdxTUCam, TUIDP_LFTLEVELS, value);
         TUCAM_Prop_GetValue(camHandle_.hIdxTUCam, TUIDP_LFTLEVELS, &dbVal);
         value = (int)dbVal;
-    }else if (function==TucsenRightL){
+    } else if (function==TucsenRightL){
         bSetPara = false;
         TUCAM_Prop_SetValue(camHandle_.hIdxTUCam, TUIDP_RGTLEVELS, value);
         TUCAM_Prop_GetValue(camHandle_.hIdxTUCam, TUIDP_RGTLEVELS, &dbVal);
         value = (int)dbVal;
     } else if (function==ADTriggerMode){
         node.pName = "AcquisitionTrigMode";
-    }else if (function==ADMinX){
+    } else if (function==ADMinX){
         node.pName = "OffsetX";
-    }else if (function==ADMinY){
+    } else if (function==ADMinY){
         node.pName = "OffsetY";
-    }else if (function==ADSizeX){
+    } else if (function==ADSizeX){
         node.pName = "Width";
-    }else if (function==ADSizeY){
+    } else if (function==ADSizeY){
         node.pName = "Height";
     } else if (function==TucsenBinMode){
         node.pName = "Binning";
@@ -1039,65 +1028,65 @@ asynStatus tucsen::writeInt32( asynUser *pasynUser, epicsInt32 value)
         node.pName = "GainMode";
     } else if (function==TucsenFanGear){
         node.pName = "FanSpeed";
-    }else if (function==TucsenDPC){
+    } else if (function==TucsenDPC){
         node.pName = "DefectPixelCorrection";
-    }else if (function==TucsenHori){
+    } else if (function==TucsenHori){
         node.pName = "HorizontalFlip";
-    }else if (function==TucsenTestPattern){
+    } else if (function==TucsenTestPattern){
         node.pName = "TestPattern";
-    }else if (function==TucsenDSNU){
+    } else if (function==TucsenDSNU){
         node.pName = "DSNU";
-    }else if (function==TucsenPRNU){
+    } else if (function==TucsenPRNU){
         node.pName = "PRNU";
-    }else if (function==TucsenTimeStamp){
+    } else if (function==TucsenTimeStamp){
         node.pName = "TimeStamp";
-    }else if (function==TucsenDeviceLED){
+    } else if (function==TucsenDeviceLED){
         node.pName = "DeviceLED";
-    }else if (function==TucsenConConfig){
+    } else if (function==TucsenConConfig){
         node.pName = "ConnectionConfig";
-    }else if (function==TucsenUserSelect){
+    } else if (function==TucsenUserSelect){
         node.pName = "UserSelect";
-    }else if (function==TucsenSplitEn){
+    } else if (function==TucsenSplitEn){
         node.pName = "AcquisitionFrameSplitEn";
-    }else if (function==TucsenTrigMode){
+    } else if (function==TucsenTrigMode){
         node.pName = "AcquisitionTrigMode";
-    }else if (function==TucsenTrigEdge){
+    } else if (function==TucsenTrigEdge){
         node.pName = "TrigEdge";
-    }else if (function==TucsenTrigExp){
+    } else if (function==TucsenTrigExp){
         node.pName = "TrigExpType";
-    }else if (function==TucsenTrgOutPort){
+    } else if (function==TucsenTrgOutPort){
         node.pName = "TrigOutputPort";
-    }else if (function==TucsenTrgOutKind){
+    } else if (function==TucsenTrgOutKind){
         node.pName = "TrigOutputKind";
-    }else if (function==TucsenTrgOutEdge){
+    } else if (function==TucsenTrgOutEdge){
         node.pName = "TrigOutputEdge";
-    }else if (function==TucsenSensorCoolType){
+    } else if (function==TucsenSensorCoolType){
         node.pName = "SensorCoolType";
-    }else if (function==TucsenSensorCooling){
+    } else if (function==TucsenSensorCooling){
         node.pName = "SensorCooling";
-    }else if (function==TucsenAntiDew){
+    } else if (function==TucsenAntiDew){
         node.pName = "AntiDew";
-    }else if (function==TucsenTrgOutDelay){
+    } else if (function==TucsenTrgOutDelay){
         node.pName = "TrigOutputDelay";
-    }else if (function==TucsenTrgOutWidth){
+    } else if (function==TucsenTrgOutWidth){
         node.pName = "TrigOutputWidth";
-    }else if (function==TucsenTrigDelay){
+    } else if (function==TucsenTrigDelay){
         node.pName = "TrigDelay";
-    }else if (function==TucsenSplitNum){
+    } else if (function==TucsenSplitNum){
         node.pName = "AcquisitionFrameSplitNum";
-    }else if (function==TucsenBlackL){
+    } else if (function==TucsenBlackL){
         node.pName = "BlackLevel";
-    }else if (function==TucsenAcqStart){
+    } else if (function==TucsenAcqStart){
         node.pName = "AcquisitionStart";
-    }else if (function==TucsenAcqStop){
+    } else if (function==TucsenAcqStop){
         node.pName = "AcquisitionStop";
-    }else if (function==TucsenSoftSignal){
+    } else if (function==TucsenSoftSignal){
         node.pName = "TrigSoftwareSignal";
-    }else if (function==TucsenParaSave){
+    } else if (function==TucsenParaSave){
         node.pName = "ParameterSave";
-    }else if (function==TucsenFactoryDefault){
+    } else if (function==TucsenFactoryDefault){
         node.pName = "FactoryDefault";
-    }else if (function==TucsenDeviceReset){
+    } else if (function==TucsenDeviceReset){
         node.pName = "AntiDew";
     } else {
         if (function < FIRST_TUCSEN_PARAM){
@@ -1119,7 +1108,6 @@ asynStatus tucsen::writeInt32( asynUser *pasynUser, epicsInt32 value)
         if(TU_ElemInteger == node.Type) { iniCameraPara();}
     }
 
-    ///printf("After Write Int32 pName = %s, function = %d, value = %d\n", paramName, function, value);
     status = setIntegerParam(function, value);
 
     if (tucStatus != TUCAMRET_SUCCESS){
@@ -1131,7 +1119,6 @@ asynStatus tucsen::writeInt32( asynUser *pasynUser, epicsInt32 value)
     return status;
 }
 
-/* Sets an double parameter */
 asynStatus tucsen::writeFloat64(asynUser *pasynUser, epicsFloat64 value)
 {
     static const char* functionName = "writeFloat64";
@@ -1146,8 +1133,6 @@ asynStatus tucsen::writeFloat64(asynUser *pasynUser, epicsFloat64 value)
 
     getParamName(function, &paramName);
     status = setDoubleParam(function, value);
-    printf("Write Float pName = %s, function = %d, value=%f\n", paramName, function, value);
-    ///return status;
     if (function==ADAcquireTime){
         node.pName = "AcquisitionExpTime";
     } else if (function==ADTemperature){
@@ -1191,8 +1176,8 @@ asynStatus tucsen::writeFloat64(asynUser *pasynUser, epicsFloat64 value)
 
     if (tucStatus != TUCAMRET_SUCCESS){
         asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
-                  "%s:%s: failed to set double ret=0x%x\n",
-                  driverName, functionName, tucStatus);
+                "%s:%s: failed to set double ret=0x%x\n",
+                driverName, functionName, tucStatus);
     }
 
     callParamCallbacks();
@@ -1281,8 +1266,6 @@ asynStatus tucsen::setWarningTemp()
 
 asynStatus tucsen::startCapture()
 {
-    static const char* functionName = "startCapture";
-
     setIntegerParam(ADNumImagesCounter, 0);
     setShutter(1);
     epicsEventSignal(startEventId_);
