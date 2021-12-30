@@ -163,10 +163,7 @@ class tucsen : public ADDriver
         asynStatus connectCamera();
         asynStatus disconnectCamera();
         asynStatus iniCameraPara();
-        asynStatus iniRatePara();
-        asynStatus iniROIPara();
         asynStatus iniImgAdjustPara();
-        asynStatus iniTrigOutPort();
 
         /* camera property control functions */
         asynStatus setCamInfo(int param, int nID, int dtype);
@@ -416,6 +413,7 @@ asynStatus tucsen::connectCamera()
     status = setSerialNumber();
     status = setWarningTemp();
     status = iniCameraPara();
+    status = iniImgAdjustPara();
 
     return status;
 }
@@ -465,7 +463,21 @@ asynStatus tucsen::iniCameraPara()
     nVal = (node.nVal > 0)? 1 : 0;
     setIntegerParam(ADTriggerMode, nVal);
 
-    iniROIPara();
+    node.pName = "OffsetX";
+    tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
+    setIntegerParam(ADMinX, node.nVal);
+
+    node.pName = "OffsetY";
+    tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
+    setIntegerParam(ADMinY, node.nVal);
+
+    node.pName = "Width";
+    tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
+    setIntegerParam(ADSizeX, node.nVal);
+
+    node.pName = "Height";
+    tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
+    setIntegerParam(ADSizeY, node.nVal);
 
     node.pName = "HorizontalFlip";
     tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
@@ -543,7 +555,21 @@ asynStatus tucsen::iniCameraPara()
     tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
     setIntegerParam(TucsenTrgOutPort, node.nVal);
 
-    iniTrigOutPort();
+    node.pName = "TrigOutputKind";
+    tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
+    setIntegerParam(TucsenTrgOutKind, node.nVal);
+
+    node.pName = "TrigOutputEdge";
+    tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
+    setIntegerParam(TucsenTrgOutEdge, node.nVal);
+
+    node.pName = "TrigOutputDelay";
+    tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
+    setIntegerParam(TucsenTrgOutDelay, node.nVal);
+
+    node.pName = "TrigOutputWidth";
+    tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
+    setIntegerParam(TucsenTrgOutWidth, node.nVal);
 
     node.pName = "AcquisitionExpTime";
     TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
@@ -565,47 +591,9 @@ asynStatus tucsen::iniCameraPara()
     tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
     setDoubleParam(TucsenHumidity, node.dbVal);
 
-    iniRatePara();
-    iniImgAdjustPara();
-
-    return status;
-}
-
-asynStatus tucsen::iniRatePara()
-{
-    static const char* functionName = "iniRatePara";
-    int tucStatus;
-    asynStatus status = asynSuccess;
-    TUCAM_ELEMENT node;
     node.pName = "AcquisitionFrameRate";
     tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
     setDoubleParam(TucsenFrameRate, node.dbVal);
-
-    return status;
-}
-
-asynStatus tucsen::iniROIPara()
-{
-    static const char* functionName = "iniROIPara";
-    int tucStatus;
-    asynStatus status = asynSuccess;
-    TUCAM_ELEMENT node;
-
-    node.pName = "OffsetX";
-    tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
-    setIntegerParam(ADMinX, node.nVal);
-
-    node.pName = "OffsetY";
-    tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
-    setIntegerParam(ADMinY, node.nVal);
-
-    node.pName = "Width";
-    tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
-    setIntegerParam(ADSizeX, node.nVal);
-
-    node.pName = "Height";
-    tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
-    setIntegerParam(ADSizeY, node.nVal);
 
     return status;
 }
@@ -658,32 +646,6 @@ asynStatus tucsen::iniImgAdjustPara()
         nVal = (int)dbVal;
         setIntegerParam(TucsenContrast, nVal);
     }
-
-    return status;
-}
-
-asynStatus tucsen::iniTrigOutPort()
-{
-    static const char* functionName = "iniTrigOutPort";
-    int tucStatus;
-    asynStatus status = asynSuccess;
-    TUCAM_ELEMENT node;
-
-    node.pName = "TrigOutputKind";
-    tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
-    setIntegerParam(TucsenTrgOutKind, node.nVal);
-
-    node.pName = "TrigOutputEdge";
-    tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
-    setIntegerParam(TucsenTrgOutEdge, node.nVal);
-
-    node.pName = "TrigOutputDelay";
-    tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
-    setIntegerParam(TucsenTrgOutDelay, node.nVal);
-
-    node.pName = "TrigOutputWidth";
-    tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
-    setIntegerParam(TucsenTrgOutWidth, node.nVal);
 
     return status;
 }
@@ -1108,9 +1070,6 @@ asynStatus tucsen::writeInt32( asynUser *pasynUser, epicsInt32 value)
         }
 
         if(TU_ElemInteger == node.Type) { iniCameraPara();}
-        //if (function==TucsenBinMode || function==TucsenSplitNum || function==TucsenSplitEn) { iniROIPara(); iniRatePara();}
-        //if (function==TucsenBinMode || function==TucsenImageMode) { iniRatePara();}
-        //if (function==TucsenTrgOutPort) { iniTrigOutPort(); }
     }
 
     ///printf("After Write Int32 pName = %s, function = %d, value = %d\n", paramName, function, value);
