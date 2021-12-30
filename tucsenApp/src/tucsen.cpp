@@ -367,7 +367,7 @@ asynStatus tucsen::connectCamera()
 {
     static const char* functionName = "connectCamera";
     int tucStatus;
-    asynStatus status;
+    int status = asynSuccess;
 
     // Init API
     char szPath[1024] = {0};
@@ -405,17 +405,17 @@ asynStatus tucsen::connectCamera()
         return asynError;
     }
 
-    status = setCamInfo(TucsenBus, TUIDI_BUS, 0);
-    status = setCamInfo(TucsenProductID, TUIDI_PRODUCT, 1);
-    status = setCamInfo(ADSDKVersion, TUIDI_VERSION_API, 0);
-    status = setCamInfo(ADFirmwareVersion, TUIDI_VERSION_FRMW, 0);
-    status = setCamInfo(ADModel, TUIDI_CAMERA_MODEL, 0);
-    status = setSerialNumber();
-    status = setWarningTemp();
-    status = iniCameraPara();
-    status = iniImgAdjustPara();
+    status |= setCamInfo(TucsenBus, TUIDI_BUS, 0);
+    status |= setCamInfo(TucsenProductID, TUIDI_PRODUCT, 1);
+    status |= setCamInfo(ADSDKVersion, TUIDI_VERSION_API, 0);
+    status |= setCamInfo(ADFirmwareVersion, TUIDI_VERSION_FRMW, 0);
+    status |= setCamInfo(ADModel, TUIDI_CAMERA_MODEL, 0);
+    status |= setSerialNumber();
+    status |= setWarningTemp();
+    status |= iniCameraPara();
+    status |= iniImgAdjustPara();
 
-    return status;
+    return (asynStatus)status;
 }
 
 asynStatus tucsen::iniCameraPara()
@@ -969,7 +969,7 @@ asynStatus tucsen::writeInt32( asynUser *pasynUser, epicsInt32 value)
 {
     static const char* functionName = "writeInt32";
     const char* paramName;
-    asynStatus status = asynSuccess;
+    int status = asynSuccess;
     bool bSetPara = true;
     int tucStatus = TUCAMRET_SUCCESS;
     int function = pasynUser->reason;
@@ -977,12 +977,12 @@ asynStatus tucsen::writeInt32( asynUser *pasynUser, epicsInt32 value)
     TUCAM_ELEMENT node;
 
     getParamName(function, &paramName);
-    status = setIntegerParam(function, value);
+    status |= setIntegerParam(function, value);
     if (function==ADAcquire){
         if (value){
-            status = startCapture();
+            status |= startCapture();
         } else {
-            status = stopCapture();
+            status |= stopCapture();
         }
         bSetPara = false;
     } else if ((function==ADNumImages)   ||
@@ -1090,7 +1090,7 @@ asynStatus tucsen::writeInt32( asynUser *pasynUser, epicsInt32 value)
         node.pName = "AntiDew";
     } else {
         if (function < FIRST_TUCSEN_PARAM){
-            status = ADDriver::writeInt32(pasynUser, value);
+            status |= ADDriver::writeInt32(pasynUser, value);
         }
         bSetPara = false;
     }
@@ -1108,7 +1108,7 @@ asynStatus tucsen::writeInt32( asynUser *pasynUser, epicsInt32 value)
         if(TU_ElemInteger == node.Type) { iniCameraPara();}
     }
 
-    status = setIntegerParam(function, value);
+    status |= setIntegerParam(function, value);
 
     if (tucStatus != TUCAMRET_SUCCESS){
     asynPrint(pasynUserSelf, ASYN_TRACEIO_DRIVER,
@@ -1116,7 +1116,7 @@ asynStatus tucsen::writeInt32( asynUser *pasynUser, epicsInt32 value)
             driverName, functionName, function, value, status, tucStatus);
     }
     callParamCallbacks();
-    return status;
+    return (asynStatus)status;
 }
 
 asynStatus tucsen::writeFloat64(asynUser *pasynUser, epicsFloat64 value)
@@ -1126,13 +1126,13 @@ asynStatus tucsen::writeFloat64(asynUser *pasynUser, epicsFloat64 value)
     double dbVal = 0.0;
 
     bool bSetPara = true;
-    asynStatus status = asynSuccess;
+    int status = asynSuccess;
     int function = pasynUser->reason;
     int tucStatus =TUCAMRET_SUCCESS;
     TUCAM_ELEMENT node;
 
     getParamName(function, &paramName);
-    status = setDoubleParam(function, value);
+    status |= setDoubleParam(function, value);
     if (function==ADAcquireTime){
         node.pName = "AcquisitionExpTime";
     } else if (function==ADTemperature){
@@ -1145,7 +1145,7 @@ asynStatus tucsen::writeFloat64(asynUser *pasynUser, epicsFloat64 value)
         node.pName = "Humidity";
     } else {
         if (function < FIRST_TUCSEN_PARAM){
-            status = ADDriver::writeFloat64(pasynUser, value);
+            status |= ADDriver::writeFloat64(pasynUser, value);
         }
         bSetPara = false;
     }
@@ -1172,7 +1172,7 @@ asynStatus tucsen::writeFloat64(asynUser *pasynUser, epicsFloat64 value)
 
         if(TU_ElemFloat == node.Type) { iniCameraPara();}
     }
-    status = setDoubleParam(function, value);
+    status |= setDoubleParam(function, value);
 
     if (tucStatus != TUCAMRET_SUCCESS){
         asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
