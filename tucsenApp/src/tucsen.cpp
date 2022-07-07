@@ -668,7 +668,6 @@ void tucsen::imageGrabTask(void)
     int imageCounter;
     int numImages, numImagesCounter;
     int imageMode;
-    int triggerMode;
     int arrayCallbacks;
     epicsTimeStamp startTime;
     int acquire;
@@ -693,9 +692,8 @@ void tucsen::imageGrabTask(void)
             tucStatus = TUCAM_Cap_Stop(camHandle_.hIdxTUCam);
             epicsEventWait(startEventId_);
             lock();
-            getIntegerParam(ADTriggerMode, &triggerMode);
             tucStatus = TUCAM_Buf_Alloc(camHandle_.hIdxTUCam, &frameHandle_);
-            tucStatus = TUCAM_Cap_Start(camHandle_.hIdxTUCam, triggerMode);
+            tucStatus = TUCAM_Cap_Start(camHandle_.hIdxTUCam, 0);
             if (tucStatus!=TUCAMRET_SUCCESS){
                 status = asynError;
                 asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
