@@ -322,7 +322,6 @@ tucsen::tucsen(const char *portName, int cameraId, int traceMask, int maxBuffers
                 "%s:%s: camera connection failed (%d)\n",
                 driverName, functionName, status);
         setIntegerParam(ADStatus, ADStatusDisconnected);
-        setStringParam(ADStatusMessage, "camera connection failed");
         report(stdout, 1);
         return;
     }
@@ -669,7 +668,6 @@ void tucsen::imageGrabTask(void)
     int numImages, numImagesCounter;
     int imageMode;
     int arrayCallbacks;
-    epicsTimeStamp startTime;
     int acquire;
 
     lock();
@@ -682,7 +680,6 @@ void tucsen::imageGrabTask(void)
         if(!acquire){
             if (!status) {
                 setIntegerParam(ADStatus, ADStatusIdle);
-                setStringParam(ADStatusMessage, "Waiting for the acquire command");
                 callParamCallbacks();
             }
             asynPrint(pasynUserSelf, ASYN_TRACE_FLOW,
@@ -701,13 +698,11 @@ void tucsen::imageGrabTask(void)
                         driverName, functionName, tucStatus);
                 setIntegerParam(ADAcquire, 0);
                 setIntegerParam(ADStatus, ADStatusError);
-                setStringParam(ADStatusMessage, "Failed to start image capture");
                 callParamCallbacks();
                 continue;
             }
 
             setIntegerParam(ADStatus, ADStatusAcquire);
-            setStringParam(ADStatusMessage, "Acquiring...");
             asynPrint(pasynUserSelf, ASYN_TRACE_FLOW,
                     "%s:%s: acquisition started\n",
                     driverName, functionName);
@@ -715,9 +710,6 @@ void tucsen::imageGrabTask(void)
             setIntegerParam(ADAcquire, 1);
             callParamCallbacks();
         }
-
-        /* Get the current time */
-        epicsTimeGetCurrent(&startTime);
 
         status = grabImage();
         if (status==asynError){
@@ -729,7 +721,6 @@ void tucsen::imageGrabTask(void)
             if (acquire == 0) {
                 if (imageMode != ADImageContinuous) {
                     setIntegerParam(ADStatus, ADStatusAborted);
-                    setStringParam(ADStatusMessage, "Aborted by user");
                 } else {
                     status = asynSuccess;
                 }
@@ -737,7 +728,6 @@ void tucsen::imageGrabTask(void)
                 stopCapture();
                 setIntegerParam(ADAcquire, 0);
                 setIntegerParam(ADStatus, ADStatusError);
-                setStringParam(ADStatusMessage, "Failed to get image");
             }
             callParamCallbacks();
             continue;
@@ -784,9 +774,6 @@ asynStatus tucsen::grabImage()
     int nDims;
     int count;
 
-    asynPrint(pasynUserSelf, ASYN_TRACE_FLOW,
-            "%s:%s: wait for buffer\n",
-            driverName, functionName);
     unlock();
     tucStatus = TUCAM_Buf_WaitForFrame(camHandle_.hIdxTUCam, &frameHandle_);
     lock();
@@ -1258,7 +1245,6 @@ asynStatus tucsen::setWarningTemp()
 asynStatus tucsen::startCapture()
 {
     setIntegerParam(ADNumImagesCounter, 0);
-    setShutter(1);
     epicsEventSignal(startEventId_);
     return asynSuccess;
 }
@@ -1267,7 +1253,6 @@ asynStatus tucsen::stopCapture()
 {
     static const char* functionName = "stopCapture";
     int tucStatus;
-    setShutter(0);
 
     tucStatus = TUCAM_Buf_AbortWait(camHandle_.hIdxTUCam);
     if (tucStatus!=TUCAMRET_SUCCESS){

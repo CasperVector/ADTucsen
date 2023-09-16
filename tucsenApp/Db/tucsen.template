@@ -941,13 +941,13 @@ record(bi, "$(P)$(R)TUAcquireStop_RBV") {
    field(SCAN, "I/O Intr")
 }
 
-record(bo, "$(P)$(R)TUTrigSoftSingal") {
+record(bo, "$(P)$(R)TUTrigSoftSignal") {
    field(DTYP, "asynInt32")
    field(OUT, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))T_SOFT_SIGNAL")
    field(VAL,  "0")
 }
 
-record(bi, "$(P)$(R)TUTrigSoftSingal_RBV") {
+record(bi, "$(P)$(R)TUTrigSoftSignal_RBV") {
    field(DTYP, "asynInt32")
    field(INP, "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))T_SOFT_SIGNAL")
    field(SCAN, "I/O Intr")
