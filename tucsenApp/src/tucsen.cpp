@@ -671,14 +671,14 @@ void tucsen::imageGrabTask(void)
     int numImages, numImagesCounter;
     int imageMode;
     int arrayCallbacks;
-    int acquire;
+    int ival;
 
     lock();
     setIntegerParam(ADStatus, ADStatusIdle);
     callParamCallbacks();
     while (1) {
-        getIntegerParam(ADAcquire, &acquire);
-        if (!acquire) {
+        getIntegerParam(ADAcquire, &ival);
+        if (!ival) {
             unlock();
             epicsEventWait(startEventId_);
             lock();
@@ -707,12 +707,24 @@ void tucsen::imageGrabTask(void)
         }
 
         while (imageMode == ADImageContinuous || numImagesCounter < numImages) {
-            if (grabImage(arrayCallbacks)) {
-                getIntegerParam(ADStatus, &tucStatus);
-                if (tucStatus == ADStatusIdle) break;
+            unlock();
+            tucStatus = TUCAM_Buf_WaitForFrame(camHandle_.hIdxTUCam, &frameHandle_);
+            lock();
+            // TUCAM_Buf_WaitForFrame() returns TUCAMRET_SUCCESS after abortion with:
+            // caput ${P}cam1:Acquire 1; sleep 2
+            // caget ${P}cam1:AcquirePeriod_RBV
+            // caput ${P}cam1:Acquire 0
+            getIntegerParam(ADStatus, &ival);
+            if (ival == ADStatusIdle) break;
+            else if (ival != ADStatusAcquire) goto error;
+            else if (tucStatus!= TUCAMRET_SUCCESS){
+                asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
+                        "%s:%s: failed to wait for buffer (0x%x)\n",
+                        driverName, functionName, tucStatus);
                 goto error;
-            }
+            } else if (grabImage(arrayCallbacks)) goto error;
             setIntegerParam(ADNumImagesCounter, ++numImagesCounter);
+            callParamCallbacks();
         }
         tucStatus = TUCAM_Cap_Stop(camHandle_.hIdxTUCam);
         if (tucStatus!=TUCAMRET_SUCCESS){
@@ -748,7 +760,6 @@ void tucsen::imageGrabTask(void)
 asynStatus tucsen::grabImage(int arrayCallbacks)
 {
     static const char* functionName = "grabImage";
-    int tucStatus;
     int nCols, nRows;
     int pixelFormat, channels, bitDepth;
     size_t dataSize, tDataSize;
@@ -759,16 +770,6 @@ asynStatus tucsen::grabImage(int arrayCallbacks)
     size_t dims[3] = {0};
     int nDims;
     int count;
-
-    unlock();
-    tucStatus = TUCAM_Buf_WaitForFrame(camHandle_.hIdxTUCam, &frameHandle_);
-    lock();
-    if (tucStatus!= TUCAMRET_SUCCESS){
-        asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
-                "%s:%s: failed to wait for buffer (0x%x)\n",
-                driverName, functionName, tucStatus);
-        return asynError;
-    }
 
     // Width & height are array dimensions
     nCols = frameHandle_.usWidth;
