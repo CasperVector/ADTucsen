@@ -155,8 +155,7 @@ class tucsen : public ADDriver
 
     private:
         /* Local methods to this class */
-        asynStatus grabImage();
-        asynStatus startCapture();
+        asynStatus grabImage(int arrayCallbacks);
         asynStatus stopCapture();
 
         asynStatus connectCamera();
@@ -647,6 +646,12 @@ asynStatus tucsen::disconnectCamera(void){
     // if necessary stop acquiring
     if (status==asynSuccess && acquiring){
         status = stopCapture();
+        tucStatus = TUCAM_Cap_Stop(camHandle_.hIdxTUCam);
+        if (tucStatus!=TUCAMRET_SUCCESS){
+            asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
+                    "%s:%s: unable to stop acquisition (0x%x)\n",
+                    driverName, functionName, tucStatus);
+        }
     }
 
     tucStatus = TUCAM_Dev_Close(camHandle_.hIdxTUCam);
@@ -662,104 +667,85 @@ asynStatus tucsen::disconnectCamera(void){
 void tucsen::imageGrabTask(void)
 {
     static const char* functionName = "imageGrabTask";
-    asynStatus status = asynSuccess;
     int tucStatus;
-    int imageCounter;
     int numImages, numImagesCounter;
     int imageMode;
     int arrayCallbacks;
     int acquire;
 
     lock();
-    while(1){
-        /* Is acquisition active? */
+    setIntegerParam(ADStatus, ADStatusIdle);
+    callParamCallbacks();
+    while (1) {
         getIntegerParam(ADAcquire, &acquire);
-
-        /* If we are not acquiring wait for a semaphore that is given when
-         * acquisition is started */
-        if(!acquire){
-            if (!status) {
-                setIntegerParam(ADStatus, ADStatusIdle);
-                callParamCallbacks();
-            }
-            asynPrint(pasynUserSelf, ASYN_TRACE_FLOW,
-                    "%s:%s: waiting for acquisition to start\n",
-                    driverName, functionName);
+        if (!acquire) {
             unlock();
-            tucStatus = TUCAM_Cap_Stop(camHandle_.hIdxTUCam);
             epicsEventWait(startEventId_);
             lock();
-            tucStatus = TUCAM_Buf_Alloc(camHandle_.hIdxTUCam, &frameHandle_);
-            tucStatus = TUCAM_Cap_Start(camHandle_.hIdxTUCam, 0);
-            if (tucStatus!=TUCAMRET_SUCCESS){
-                status = asynError;
-                asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
-                        "%s:%s: failed to start image capture (0x%x)\n",
-                        driverName, functionName, tucStatus);
-                setIntegerParam(ADAcquire, 0);
-                setIntegerParam(ADStatus, ADStatusError);
-                callParamCallbacks();
-                continue;
-            }
-
-            setIntegerParam(ADStatus, ADStatusAcquire);
-            asynPrint(pasynUserSelf, ASYN_TRACE_FLOW,
-                    "%s:%s: acquisition started\n",
-                    driverName, functionName);
-            setIntegerParam(ADNumImagesCounter, 0);
-            setIntegerParam(ADAcquire, 1);
-            callParamCallbacks();
         }
-
-        status = grabImage();
-        if (status==asynError){
-            // Release the allocated NDArray
-            if (pRaw_) pRaw_->release();
-            pRaw_ = NULL;
-
-            getIntegerParam(ADAcquire, &acquire);
-            if (acquire == 0) {
-                if (imageMode != ADImageContinuous) {
-                    setIntegerParam(ADStatus, ADStatusAborted);
-                } else {
-                    status = asynSuccess;
-                }
-            } else {
-                stopCapture();
-                setIntegerParam(ADAcquire, 0);
-                setIntegerParam(ADStatus, ADStatusError);
-            }
-            callParamCallbacks();
-            continue;
-        }
-
-        getIntegerParam(NDArrayCounter, &imageCounter);
         getIntegerParam(ADNumImages, &numImages);
-        getIntegerParam(ADNumImagesCounter, &numImagesCounter);
         getIntegerParam(ADImageMode, &imageMode);
         getIntegerParam(NDArrayCallbacks, &arrayCallbacks);
-        imageCounter++;
-        numImagesCounter++;
-        setIntegerParam(NDArrayCounter, imageCounter);
-        setIntegerParam(ADNumImagesCounter, numImagesCounter);
+        setIntegerParam(ADNumImagesCounter, numImagesCounter = 0);
+        setIntegerParam(ADStatus, ADStatusAcquire);
+        if (imageMode == ADImageSingle) numImages = 1;
+        callParamCallbacks();
 
-        if(arrayCallbacks){
-            doCallbacksGenericPointer(pRaw_, NDArrayData, 0);
+        tucStatus = TUCAM_Buf_Alloc(camHandle_.hIdxTUCam, &frameHandle_);
+        if (tucStatus!=TUCAMRET_SUCCESS){
+            asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
+                    "%s:%s: unable to allocate camera buffer (0x%x)\n",
+                    driverName, functionName, tucStatus);
+            goto buf_error;
+        }
+        tucStatus = TUCAM_Cap_Start(camHandle_.hIdxTUCam, 0);
+        if (tucStatus!=TUCAMRET_SUCCESS){
+            asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
+                    "%s:%s: failed to start image capture (0x%x)\n",
+                    driverName, functionName, tucStatus);
+            goto cap_error;
         }
 
-        if (pRaw_) pRaw_->release();
-        pRaw_ = NULL;
-
-        if ((imageMode==ADImageSingle) || ((imageMode==ADImageMultiple) && (numImagesCounter>=numImages))){
-            status = stopCapture();
-            setIntegerParam(ADAcquire, 0);
-            setIntegerParam(ADStatus, ADStatusIdle);
+        while (imageMode == ADImageContinuous || numImagesCounter < numImages) {
+            if (grabImage(arrayCallbacks)) {
+                getIntegerParam(ADStatus, &tucStatus);
+                if (tucStatus == ADStatusIdle) break;
+                goto error;
+            }
+            setIntegerParam(ADNumImagesCounter, ++numImagesCounter);
         }
+        tucStatus = TUCAM_Cap_Stop(camHandle_.hIdxTUCam);
+        if (tucStatus!=TUCAMRET_SUCCESS){
+            asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
+                    "%s:%s: unable to stop acquisition (0x%x)\n",
+                    driverName, functionName, tucStatus);
+            goto cap_error;
+        }
+        tucStatus = TUCAM_Buf_Release(camHandle_.hIdxTUCam);
+        if (tucStatus!=TUCAMRET_SUCCESS){
+            asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
+                    "%s:%s: unable to release camera buffer (0x%x)\n",
+                    driverName, functionName, tucStatus);
+            goto buf_error;
+        }
+
+        setIntegerParam(ADAcquire, 0);
+        setIntegerParam(ADStatus, ADStatusIdle);
+        callParamCallbacks();
+        continue;
+        error:
+        stopCapture();
+        TUCAM_Cap_Stop(camHandle_.hIdxTUCam);
+        cap_error:
+        TUCAM_Buf_Release(camHandle_.hIdxTUCam);
+        buf_error:
+        setIntegerParam(ADAcquire, 0);
+        setIntegerParam(ADStatus, ADStatusAborted);
         callParamCallbacks();
     }
 }
 
-asynStatus tucsen::grabImage()
+asynStatus tucsen::grabImage(int arrayCallbacks)
 {
     static const char* functionName = "grabImage";
     int tucStatus;
@@ -882,6 +868,9 @@ asynStatus tucsen::grabImage()
 
     pRaw_->pAttributeList->add("ColorMode", "Color mode", NDAttrInt32, &colorMode);
 
+    if (arrayCallbacks) doCallbacksGenericPointer(pRaw_, NDArrayData, 0);
+    pRaw_->release();
+    pRaw_ = NULL;
     return asynSuccess;
 }
 
@@ -958,10 +947,16 @@ asynStatus tucsen::writeInt32( asynUser *pasynUser, epicsInt32 value)
     getParamName(function, &paramName);
     status |= setIntegerParam(function, value);
     if (function==ADAcquire){
-        if (value){
-            status |= startCapture();
-        } else {
+        int adstatus;
+        getIntegerParam(ADStatus, &adstatus);
+        if (value && adstatus != ADStatusAcquire) {
+            epicsEventSignal(startEventId_);
+        } else if (!value && adstatus == ADStatusAcquire) {
+            int mode;
+            getIntegerParam(ADImageMode, &mode);
+            setIntegerParam(ADStatus, mode == ADImageContinuous ? ADStatusIdle : ADStatusAborted);
             status |= stopCapture();
+            value = 1;
         }
         bSetPara = false;
     } else if (function==ADNumImages){
@@ -1242,39 +1237,16 @@ asynStatus tucsen::setWarningTemp()
     }
 }
 
-asynStatus tucsen::startCapture()
-{
-    setIntegerParam(ADNumImagesCounter, 0);
-    epicsEventSignal(startEventId_);
-    return asynSuccess;
-}
-
 asynStatus tucsen::stopCapture()
 {
     static const char* functionName = "stopCapture";
-    int tucStatus;
-
-    tucStatus = TUCAM_Buf_AbortWait(camHandle_.hIdxTUCam);
+    int tucStatus = TUCAM_Buf_AbortWait(camHandle_.hIdxTUCam);
     if (tucStatus!=TUCAMRET_SUCCESS){
         asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
                 "%s:%s: unable to abort wait (0x%x)\n",
                 driverName, functionName, tucStatus);
+        return asynError;
     }
-
-    tucStatus = TUCAM_Cap_Stop(camHandle_.hIdxTUCam);
-    if (tucStatus!=TUCAMRET_SUCCESS){
-        asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
-                "%s:%s: unable to stop acquisition (0x%x)\n",
-                driverName, functionName, tucStatus);
-    }
-
-    tucStatus = TUCAM_Buf_Release(camHandle_.hIdxTUCam);
-    if (tucStatus!=TUCAMRET_SUCCESS){
-        asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
-                "%s:%s: unable to release camera buffer (0x%x)\n",
-                driverName, functionName, tucStatus);
-    }
-
     return asynSuccess;
 }
 
