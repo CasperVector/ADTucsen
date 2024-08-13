@@ -9,6 +9,7 @@
 
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -87,8 +88,8 @@ static int TUCAMInitialized = 0;
 class tucsen : public ADDriver
 {
     public:
-        tucsen( const char* portName, int cameraId, int traceMask, int maxBuffers,
-                size_t maxMemory, int priority, int stackSize);
+        tucsen( const char *portName, const char *cameraId, int traceMask,
+                int maxBuffers, size_t maxMemory, int priority, int stackSize);
 
         /* Virtual methods to override from ADDrive */
         virtual asynStatus writeInt32( asynUser *pasynUser, epicsInt32 value);
@@ -158,7 +159,7 @@ class tucsen : public ADDriver
         asynStatus grabImage(int arrayCallbacks);
         asynStatus stopCapture();
 
-        asynStatus connectCamera();
+        asynStatus connectCamera(const char *cameraId);
         asynStatus disconnectCamera();
         asynStatus iniCameraPara();
         asynStatus iniImgAdjustPara();
@@ -204,7 +205,7 @@ class tucsen : public ADDriver
  * \param[in] stackSize The size of the stack of the EPICS port thread. 0=use
  *            asyn default.
  */
-extern "C" int tucsenConfig(const char *portName, int cameraId, int traceMask,
+extern "C" int tucsenConfig(const char *portName, const char *cameraId, int traceMask,
         int maxBuffers, size_t maxMemory, int priority, int stackSize)
 {
     new tucsen( portName, cameraId, traceMask, maxBuffers, maxMemory, priority, stackSize);
@@ -231,11 +232,11 @@ static void tempReadTaskC(void *drvPvt)
 
 /* Constructor for the Tucsen class */
 
-tucsen::tucsen(const char *portName, int cameraId, int traceMask, int maxBuffers,
-        size_t maxMemory, int priority, int stackSize)
+tucsen::tucsen(const char *portName, const char *cameraId, int traceMask,
+        int maxBuffers, size_t maxMemory, int priority, int stackSize)
     : ADDriver( portName, 1, NUM_TUCSEN_PARAMS, maxBuffers, maxMemory, asynEnumMask,
             asynEnumMask, ASYN_CANBLOCK | ASYN_MULTIDEVICE, 1, priority, stackSize),
-    cameraId_(cameraId), exiting_(0), pRaw_(NULL)
+    cameraId_(-1), exiting_(0), pRaw_(NULL)
 {
     static const char *functionName = "tucsen";
     char versionString[20];
@@ -315,7 +316,7 @@ tucsen::tucsen(const char *portName, int cameraId, int traceMask, int maxBuffers
     setIntegerParam(TucsenFactoryDefault, 0);
     setIntegerParam(TucsenDeviceReset, 0);
 
-    status = connectCamera();
+    status = connectCamera(cameraId);
     if (status) {
         asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
                 "%s:%s: camera connection failed (%d)\n",
@@ -357,7 +358,7 @@ void tucsen::shutdown(void)
     }
 }
 
-asynStatus tucsen::connectCamera()
+asynStatus tucsen::connectCamera(const char *cameraId)
 {
     static const char* functionName = "connectCamera";
     int tucStatus;
@@ -376,10 +377,12 @@ asynStatus tucsen::connectCamera()
                 driverName, functionName, tucStatus);
         return asynError;
     }
-    if (apiHandle_.uiCamCount<1){
+
+    cameraId_ = strtol(cameraId, NULL, 10);
+    if (cameraId_<0 || (unsigned int)cameraId_>=apiHandle_.uiCamCount){
         asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
-                "%s:%s: no camera detected (0x%x)\n",
-                driverName, functionName, tucStatus);
+                "%s:%s: camera %d not available in %u detected\n",
+                driverName, functionName, cameraId_, apiHandle_.uiCamCount);
         return asynError;
     }
 
@@ -1251,8 +1254,8 @@ asynStatus tucsen::stopCapture()
     return asynSuccess;
 }
 
-static const iocshArg configArg0 = {"Port name", iocshArgString};
-static const iocshArg configArg1 = {"CameraId", iocshArgInt};
+static const iocshArg configArg0 = {"portName", iocshArgString};
+static const iocshArg configArg1 = {"cameraId", iocshArgString};
 static const iocshArg configArg2 = {"traceMask", iocshArgInt};
 static const iocshArg configArg3 = {"maxBuffers", iocshArgInt};
 static const iocshArg configArg4 = {"maxMemory", iocshArgInt};
@@ -1268,7 +1271,7 @@ static const iocshArg * const configArgs [] = {&configArg0,
 static const iocshFuncDef configtucsen = {"tucsenConfig", 7, configArgs};
 static void configCallFunc(const iocshArgBuf *args)
 {
-    tucsenConfig(args[0].sval, args[1].ival, args[2].ival,
+    tucsenConfig(args[0].sval, args[1].sval, args[2].ival,
                  args[3].ival, args[4].ival, args[5].ival,
                  args[6].ival);
 }
