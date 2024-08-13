@@ -165,8 +165,8 @@ class tucsen : public ADDriver
         asynStatus iniImgAdjustPara();
 
         /* camera property control functions */
+        asynStatus trySerialNumber(char const *cameraId, int i);
         asynStatus setCamInfo(int param, int nID, int dtype);
-        asynStatus setSerialNumber();
         asynStatus setWarningTemp();
 
         /* Data */
@@ -361,7 +361,7 @@ void tucsen::shutdown(void)
 asynStatus tucsen::connectCamera(const char *cameraId)
 {
     static const char* functionName = "connectCamera";
-    int tucStatus;
+    int tucStatus, i;
     int status = asynSuccess;
 
     // Init API
@@ -378,7 +378,11 @@ asynStatus tucsen::connectCamera(const char *cameraId)
         return asynError;
     }
 
-    cameraId_ = strtol(cameraId, NULL, 10);
+    if (!strlen(cameraId)) cameraId = "0";
+    if (strlen(cameraId)<2) cameraId_ = strtol(cameraId, NULL, 10);
+    for (i=0; (unsigned int)i<apiHandle_.uiCamCount; ++i){
+        trySerialNumber(cameraId, i);
+    }
     if (cameraId_<0 || (unsigned int)cameraId_>=apiHandle_.uiCamCount){
         asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
                 "%s:%s: camera %d not available in %u detected\n",
@@ -407,7 +411,6 @@ asynStatus tucsen::connectCamera(const char *cameraId)
     status |= setCamInfo(ADSDKVersion, TUIDI_VERSION_API, 0);
     status |= setCamInfo(ADFirmwareVersion, TUIDI_VERSION_FRMW, 0);
     status |= setCamInfo(ADModel, TUIDI_CAMERA_MODEL, 0);
-    status |= setSerialNumber();
     status |= setWarningTemp();
     status |= iniCameraPara();
     status |= iniImgAdjustPara();
@@ -1197,26 +1200,34 @@ asynStatus tucsen::setCamInfo(int param, int nID, int dtype)
     }
 }
 
-asynStatus tucsen::setSerialNumber()
+asynStatus tucsen::trySerialNumber(char const *cameraId, int i)
 {
-    static const char* functionName = "setSerialNumber";
-    int tucStatus;
+    TUCAMRET tucStatus;
     char cSN[TUSN_SIZE] = {0};
-
     TUCAM_ELEMENT node;
     node.pName = "DeviceID";
     node.pTransfer = &cSN[0];
-    tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
-
-    if (tucStatus==TUCAMRET_SUCCESS){
-        setStringParam(ADSerialNumber, node.pTransfer);
-        return asynSuccess;
-    } else {
-        asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
-                "%s:%s unable to get serial number (error=0x%x)\n",
-                driverName, functionName, tucStatus);
+    camHandle_.hIdxTUCam = NULL;
+    camHandle_.uiIdxOpen = i;
+    tucStatus = TUCAM_Dev_Open(&camHandle_);
+    if (tucStatus!=TUCAMRET_SUCCESS){
+        fprintf(stderr, "%2d%c: TUCAM_Dev_Open: error 0x%08X\n",
+            i, cameraId_==i ? '*' : ' ', tucStatus);
         return asynError;
     }
+    tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
+    if (tucStatus!=TUCAMRET_SUCCESS){
+        fprintf(stderr, "%2d%c: TUCAM_GenICam_ElementAttr: error 0x%08X\n",
+            i, cameraId_==i ? '*' : ' ', tucStatus);
+        return asynError;
+    }
+    TUCAM_Dev_Close(camHandle_.hIdxTUCam);
+    if (cameraId_<0 && !strcmp(node.pTransfer, cameraId)){
+        cameraId_ = i;
+        setStringParam(ADSerialNumber, node.pTransfer);
+    }
+    fprintf(stderr, "%2d%c: %s\n", i, cameraId_==i ? '*' : ' ', node.pTransfer);
+    return asynSuccess;
 }
 
 asynStatus tucsen::setWarningTemp()

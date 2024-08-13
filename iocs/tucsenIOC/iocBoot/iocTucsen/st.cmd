@@ -23,9 +23,9 @@ epicsEnvSet("CBUFFS", "500")
 # The search path for database files
 epicsEnvSet("EPICS_DB_INCLUDE_PATH", "$(ADCORE)/db")
 
-# tucsenConfig(const char *portName, int cameraId, int traceMask, int maxBuffers,
+# tucsenConfig(const char *portName, const char *cameraId, int traceMask, int maxBuffers,
 #              size_t maxMemory, int priority, int stackSize)
-tucsenConfig("$(PORT)", $(CAMERA), 0x1, 0)
+tucsenConfig("$(PORT)", "$(CAMERA)", 0x1, 0)
 dbLoadRecords("$(ADTUCSEN)/db/tucsen.template", "P=$(PREFIX),R=cam1:,PORT=$(PORT),ADDR=0,TIMEOUT=1")
 
 # Create a standard arrays plugin
