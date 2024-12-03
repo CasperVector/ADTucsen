@@ -1207,6 +1207,7 @@ asynStatus tucsen::trySerialNumber(char const *cameraId, int i)
     TUCAM_ELEMENT node;
     node.pName = "DeviceID";
     node.pTransfer = &cSN[0];
+    node.nVal = TUSN_SIZE - 1;
     camHandle_.hIdxTUCam = NULL;
     camHandle_.uiIdxOpen = i;
     tucStatus = TUCAM_Dev_Open(&camHandle_);
@@ -1218,6 +1219,12 @@ asynStatus tucsen::trySerialNumber(char const *cameraId, int i)
     tucStatus = TUCAM_GenICam_ElementAttr(camHandle_.hIdxTUCam, &node, node.pName);
     if (tucStatus!=TUCAMRET_SUCCESS){
         fprintf(stderr, "%2d%c: TUCAM_GenICam_ElementAttr: error 0x%08X\n",
+            i, cameraId_==i ? '*' : ' ', tucStatus);
+        return asynError;
+    }
+    tucStatus = TUCAM_GenICam_GetElementValue(camHandle_.hIdxTUCam, &node);
+    if (tucStatus!=TUCAMRET_SUCCESS){
+        fprintf(stderr, "%2d%c: TUCAM_GenICam_GetElementValue: error 0x%08X\n",
             i, cameraId_==i ? '*' : ' ', tucStatus);
         return asynError;
     }
