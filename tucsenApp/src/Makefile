@@ -3,20 +3,10 @@ include $(TOP)/configure/CONFIG
 #----------------------------------------
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 
-# Need to figure this out; library is only shareable, so we say LIB_SYS_LIBS and it works
-ifeq (linux-x86, $(findstring linux-x86, $(T_A)))
-SHARED_LIBRARIES=NO
-endif
-
-LIBRARY_IOC_Linux += tucsen
+LIBRARY_IOC += tucsen
 LIB_SRCS += tucsen.cpp
-LIB_SYS_LIBS_Linux += TUCam
-
+LIB_SYS_LIBS += TUCam
 DBD += tucsenSupport.dbd
-
-# Add locally compiled object code
-PROD_LIBS += tucsen
-PROD_SYS_LIBS_Linux += TUCam
 
 include $(ADCORE)/ADApp/commonLibraryMakefile
 

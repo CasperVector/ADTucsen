@@ -10,7 +10,7 @@ include $(TOP)/configure/CONFIG
 INC += TUCamApi.h TUDefine.h
 
 ifeq (linux-x86_64, $(findstring linux-x86_64, $(T_A)))
-LIB_INSTALLS_Linux += $(wildcard ../os/linux-x86_64/*.so*)
+LIB_INSTALLS += $(wildcard ../os/linux-x86_64/*.so*)
 
 endif
 

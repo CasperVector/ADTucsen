@@ -4,8 +4,7 @@ include $(TOP)/configure/CONFIG
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 
 PROD_NAME = tucsenApp
-PROD_IOC_Linux += $(PROD_NAME)
-PROD_IOC_WIN32 += $(PROD_NAME)
+PROD_IOC += $(PROD_NAME)
 
 # <name>.dbd will be created from <name>Include.dbd
 DBD += $(PROD_NAME).dbd
@@ -16,7 +15,6 @@ $(PROD_NAME)_SRCS += $(PROD_NAME)_registerRecordDeviceDriver.cpp $(PROD_NAME)Mai
 
 # Add locally compiled object code
 PROD_LIBS           += tucsen
-PROD_SYS_LIBS_Linux += TUCam
 
 ifeq (windows-x64-debug, $(findstring windows-x64-debug, $(T_A)))
 USR_LDFLAGS_WIN32 += /NODEFAULTLIB:LIBCMT.lib
